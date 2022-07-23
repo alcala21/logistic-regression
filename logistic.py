@@ -33,6 +33,20 @@ class CustomLogisticRegression:
             self.coef_ += -self.l_rate * dJdt.dot(X_train)
         self.fit_intercept = True
 
+    def fit_log_loss(self, X_train, y_train):
+        n = X_train.shape[0]
+        if self.fit_intercept:
+            X_train = np.insert(X_train, 0, np.ones(n), axis=1)
+        self.coef_ = np.zeros(X_train.shape[1])
+        self.fit_intercept = False
+
+        for _ in range(self.n_epoch):
+            yhat = self.predict_proba(X_train, self.coef_)
+            y_error = (yhat - y_train)
+            self.coef_ += -self.l_rate * y_error.dot(X_train) / n
+        self.fit_intercept = True
+
+
     def predict(self, X_test, cut_off=0.5):
         yhat = self.predict_proba(X_test, self.coef_)
         return (yhat >= cut_off).astype(int)
@@ -63,7 +77,7 @@ X_train, X_test, y_train, y_test = split_data(X, y)
 
 
 model = CustomLogisticRegression(fit_intercept=True, l_rate=0.01, n_epoch=1000)
-model.fit_mse(X_train, y_train)
+model.fit_log_loss(X_train, y_train)
 y_pred = model.predict(X_test)
 acc = accuracy_score(y_pred, y_test)
 res = {'coef_': list(model.coef_), 'accuracy': acc}
